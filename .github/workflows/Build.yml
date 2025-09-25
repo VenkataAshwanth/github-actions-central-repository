@@ -62,7 +62,12 @@ jobs:
           java-version: 17
 
       - name: Build with Maven
-        run: mvn -B package --file pom.xml -DskipMunitTests
+        run: |
+          mvn -B package --file pom.xml -DskipMunitTests --settings settings.xml \
+            "-Dmule.ee.username=${{ secrets.NEXUS_USERNAME }}" \
+            "-Dmule.ee.password=${{ secrets.NEXUS_PASSWORD }}" \
+            "-Dap.ca.client_id=${{ vars.CONN_APP_CLIENT_ID }}" \
+            "-Dap.ca.client_secret=${{ vars.CONN_APP_CLIENT_SECRET }}"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
