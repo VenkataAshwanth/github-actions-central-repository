@@ -35,8 +35,8 @@ jobs:
         run: |
           mvn test --settings settings.xml \
             "-Dencrypt.key=${{ vars.ENCRYPT_KEY }}" \
-            "-Dmule.ee.username=${{ vars.NEXUS_USERNAME }}" \
-            "-Dmule.ee.password=${{ vars.NEXUS_PASSWORD }}"
+            "-Dmule.ee.username=${{ secrets.NEXUS_USERNAME }}" \
+            "-Dmule.ee.password=${{ secrets.NEXUS_PASSWORD }}"
 
   Build:
     needs: Test # This job runs only after the 'Test' job succeeds
