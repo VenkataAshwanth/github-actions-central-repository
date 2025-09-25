@@ -32,15 +32,11 @@ jobs:
           java-version: 17
 
       - name: Test Munits with Maven
-        env:
-          ENCRYPT_KEY: ${{ vars.ENCRYPT_KEY }}
-          NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
         run: |
           mvn test --settings settings.xml \
-            "-Dencrypt.key=$ENCRYPT_KEY" \
-            "-Dmule.ee.username=$NEXUS_USERNAME" \
-            "-Dmule.ee.password=$NEXUS_PASSWORD"
+            "-Dencrypt.key=${{ secrets.ENCRYPT_KEY }}" \
+            "-Dmule.ee.username=${{ secrets.NEXUS_USERNAME }}" \
+            "-Dmule.ee.password=${{ secrets.NEXUS_PASSWORD }}"
 
   Build:
     needs: Test # This job runs only after the 'Test' job succeeds
@@ -96,6 +92,6 @@ jobs:
       - name: Publish to Exchange
         run: |
           mvn deploy -Pdeploy-to-exchange-v3 --settings settings.xml -DskipMunitTests \
-          -Dap.ca.client_id="${{ vars.CONN_APP_CLIENT_ID }}" \
-          -Dap.ca.client_secret="${{ vars.CONN_APP_CLIENT_SECRET }}" \
-          -Dencrypt.key="${{ vars.ENCRYPT_KEY }}"
+            "-Dap.ca.client_id=${{ vars.CONN_APP_CLIENT_ID }}" \
+            "-Dap.ca.client_secret=${{ vars.CONN_APP_CLIENT_SECRET }}" \
+            "-Dencrypt.key=${{ vars.ENCRYPT_KEY }}"
