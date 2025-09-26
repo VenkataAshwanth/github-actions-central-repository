@@ -14,7 +14,7 @@ jobs:
       PRE_DEPLOYMENT_ACTION: 'pre'
     secrets: inherit
 
-  Deploy-to-SIT:
+  SIT:
     needs: DEV
     if: github.ref_name == 'develop'
     uses: ./.github/workflows/reusable-deploy.yml
