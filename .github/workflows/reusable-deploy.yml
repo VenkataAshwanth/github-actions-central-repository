@@ -70,6 +70,7 @@ jobs:
             "-Dch.space=${{ vars.CH_SPACE }}" \
             "-Dapp.runtime.semver=${{ vars.APP_RUNTIME }}"  \
             "-Denv=$ENV_LOWER"  \
+            "-Ddeployment.suffix=$ENV_LOWER"  \
             "-Dap.client_id=${{ vars.AP_CLIENT_ID }}" \
             "-Dap.client_secret=${{ vars.AP_CLIENT_SECRET }}" \
             "-Dapi.id=${{ steps.PreDeploy.outputs.API_ID }}"
