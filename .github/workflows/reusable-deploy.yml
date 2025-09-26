@@ -46,7 +46,7 @@ jobs:
           npm install -g anypoint-cli-v4
           sudo apt-get update && sudo apt-get -qq -y install jq
           sudo apt install libxml2-utils
-          
+
           # --- 2. RUN PRE-DEPLOYMENT TASKS ---
           chmod +x scripts/deploymentAutomationScript.sh
           ./scripts/deploymentAutomationScript.sh ${{ inputs.ENVIRONMENT_NAME }} ${{ secrets.CONN_APP_CLIENT_ID }} ${{ secrets.CONN_APP_CLIENT_SECRET }} ${{ secrets.MULE_PARENT_BIZ_GROUP }} pom.xml ${{ inputs.DEPLOYMENT_TYPE }} ${{ inputs.PRE_DEPLOYMENT_ACTION }} > ./result.txt
@@ -56,20 +56,32 @@ jobs:
 
       - name: 2. Deploy to Runtime
         run: |
+          ENV_LOWER=$(echo "$environment" | tr '[:upper:]' '[:lower:]')
+          echo "Lowercase env = $ENV_LOWER"
+
           echo "Deploying to CloudHub 2.0 (${{ inputs.ENVIRONMENT_NAME }})..."
           mvn mule:deploy --settings settings.xml -DskipMunitTests \
             "-Dmule.ee.username=${{ secrets.NEXUS_USERNAME }}" \
             '-Dmule.ee.password=${{ secrets.NEXUS_PASSWORD }}' \
             "-Dap.ca.client_id=${{ secrets.CONN_APP_CLIENT_ID }}" \
             "-Dap.ca.client_secret=${{ secrets.CONN_APP_CLIENT_SECRET }}" \
+            "-Ddeployment.env=${{ inputs.ENVIRONMENT_NAME }}" \
             "-Dencrypt.key=${{ secrets.ENCRYPT_KEY }}" \
+            "-Dch.space=${{ vars.CH_SPACE }}" \
+            "-Dapp.runtime.semver=${{ vars.APP_RUNTIME }}"  \
+            "-Denv=$ENV_LOWER"  \
+            "-Dap.client_id=${{ vars.AP_CLIENT_ID }}" \
+            "-Dap.client_secret=${{ vars.AP_CLIENT_SECRET }}" \
             "-Dapi.id=${{ steps.PreDeploy.outputs.API_ID }}"
 
       - name: 3. Run Post-Deployment Tasks
         run: |
+          ENV_LOWER=$(echo "$environment" | tr '[:upper:]' '[:lower:]')
+          echo "Lowercase env = $ENV_LOWER"
+
           echo "Running Post-Deployment Tasks for ${{ inputs.ENVIRONMENT_NAME }}..."
           chmod +x scripts/deploymentAutomationScript.sh
-          ./scripts/deploymentAutomationScript.sh "${{ inputs.ENVIRONMENT_NAME }}" ${{ secrets.CONN_APP_CLIENT_ID }} ${{ secrets.CONN_APP_CLIENT_SECRET }} ${{ secrets.MULE_PARENT_BIZ_GROUP }} pom.xml "api" "post-deployment" "policies/${{ inputs.ENVIRONMENT_NAME }}/policies.yaml"
+          ./scripts/deploymentAutomationScript.sh "${{ inputs.ENVIRONMENT_NAME }}" ${{ secrets.CONN_APP_CLIENT_ID }} ${{ secrets.CONN_APP_CLIENT_SECRET }} ${{ secrets.MULE_PARENT_BIZ_GROUP }} pom.xml ${{ inputs.DEPLOYMENT_TYPE }} ${{ inputs.POST_DEPLOYMENT_ACTION }} "policies/$ENV_LOWER/policies.yaml"
 
           echo "Running Postman integration tests..."
           npm install -g newman newman-reporter-htmlextra
