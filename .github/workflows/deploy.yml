@@ -1,0 +1,27 @@
+# In your central repository
+name: Deploy to DEV and SIT Environments
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  DEV:
+    if: github.ref_name == 'develop'
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      ENVIRONMENT_NAME: DEV
+      DEPLOYMENT_TYPE: 'cloudhub2'
+      PRE_DEPLOYMENT_ACTION: 'pre'
+    secrets: inherit
+
+  Deploy-to-SIT:
+    needs: DEV
+    if: github.ref_name == 'develop'
+    uses: ./.github/workflows/reusable-deploy.yml
+    with:
+      ENVIRONMENT_NAME: SIT
+      DEPLOYMENT_TYPE: 'cloudhub2'
+      PRE_DEPLOYMENT_ACTION: 'pre'
+    secrets: inherit

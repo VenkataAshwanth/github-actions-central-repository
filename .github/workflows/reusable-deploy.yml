@@ -1,0 +1,82 @@
+name: Reusable MuleSoft Deployment
+
+on:
+  workflow_call:
+    inputs:
+      ENVIRONMENT_NAME:
+        description: 'The target environment for deployment (e.g., dev, uat, prod)'
+        required: true
+        type: string
+      DEPLOYMENT_TYPE:
+        description: 'The type of deployment (e.g., api, integration)'
+        required: true
+        type: string
+      PRE_DEPLOYMENT_ACTION:
+        description: 'The pre-deployment action to perform'
+        required: true
+        type: string
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.ENVIRONMENT_NAME }}
+    steps:
+      - name: Checkout Application Code
+        uses: actions/checkout@v4
+
+      - name: Cache Maven Dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: 17
+
+      - name: Run Pre-Deployment Tasks
+        id: PreDeploy
+        run: |
+          echo "Running Pre-Deployment Tasks for ${{ inputs.ENVIRONMENT_NAME }}..."
+          # --- 1. CHECKOUT & SETUP ---
+          npm install -g anypoint-cli-v4
+          sudo apt-get update && sudo apt-get -qq -y install jq
+          sudo apt install libxml2-utils
+
+          # --- 2. EXTRACT GROUP ID ---
+          echo "Extracting Group ID from pom.xml..."
+          GROUP_ID=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout)
+          echo "Found Group ID: $GROUP_ID"
+
+           # --- 3. RUN PRE-DEPLOYMENT TASKS ---
+           chmod +x scripts/deploymentAutomationScript.sh
+          ./scripts/deploymentAutomationScript.sh ${{ inputs.ENVIRONMENT_NAME }} ${{ secrets.CONN_APP_CLIENT_ID }} ${{ secrets.CONN_APP_CLIENT_SECRET }} "$GROUP_ID" pom.xml ${{ inputs.DEPLOYMENT_TYPE }} ${{ inputs.PRE_DEPLOYMENT_ACTION }} > ./result.txt
+          cat result.txt
+          echo "API_ID=$(cat result.txt | grep "APIId:" | cut -d":" -f2)" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: 2. Deploy to Runtime
+        run: |
+          echo "Deploying to CloudHub 2.0 (${{ inputs.ENVIRONMENT_NAME }})..."
+          mvn mule:deploy --settings settings.xml -DskipMunitTests \
+            "-Dmule.ee.username=${{ secrets.NEXUS_USERNAME }}" \
+            '-Dmule.ee.password=${{ secrets.NEXUS_PASSWORD }}' \
+            "-Dap.ca.client_id=${{ secrets.CONN_APP_CLIENT_ID }}" \
+            "-Dap.ca.client_secret=${{ secrets.CONN_APP_CLIENT_SECRET }}" \
+            "-Dencrypt.key=${{ secrets.ENCRYPT_KEY }}" \
+            "-Dapi.id=${{ steps.PreDeploy.outputs.API_ID }}"
+
+      - name: 3. Run Post-Deployment Tasks
+        run: |
+          echo "Running Post-Deployment Tasks for ${{ inputs.ENVIRONMENT_NAME }}..."
+          chmod +x scripts/deploymentAutomationScript.sh
+          ./scripts/deploymentAutomationScript.sh "${{ inputs.ENVIRONMENT_NAME }}" ${{ secrets.CONN_APP_CLIENT_ID }} ${{ secrets.CONN_APP_CLIENT_SECRET }} ${{ secrets.MULE_PARENT_BIZ_GROUP }} pom.xml "api" "post-deployment" "policies/${{ inputs.ENVIRONMENT_NAME }}/policies.yaml"
+
+          echo "Running Postman integration tests..."
+          npm install -g newman newman-reporter-htmlextra
+          sleep 60
+          newman run postman/collection.json -e "postman/${{ inputs.ENVIRONMENT_NAME }}.postman_environment.json"
