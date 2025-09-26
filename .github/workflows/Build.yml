@@ -34,11 +34,11 @@ jobs:
       - name: Test Munits with Maven
         run: |
           mvn test --settings settings.xml \
-            "-Dencrypt.key=${{ vars.ENCRYPT_KEY }}" \
+            "-Dencrypt.key=${{ secrets.ENCRYPT_KEY }}" \
             "-Dmule.ee.username=${{ secrets.NEXUS_USERNAME }}" \
             '-Dmule.ee.password=${{ secrets.NEXUS_PASSWORD }}' \
-            "-Dap.ca.client_id=${{ vars.CONN_APP_CLIENT_ID }}" \
-            "-Dap.ca.client_secret=${{ vars.CONN_APP_CLIENT_SECRET }}"
+            "-Dap.ca.client_id=${{ secrets.CONN_APP_CLIENT_ID }}" \
+            "-Dap.ca.client_secret=${{ secrets.CONN_APP_CLIENT_SECRET }}"
 
   Build:
     needs: Test # This job runs only after the 'Test' job succeeds
@@ -66,8 +66,8 @@ jobs:
           mvn -B package --file pom.xml -DskipMunitTests --settings settings.xml \
             "-Dmule.ee.username=${{ secrets.NEXUS_USERNAME }}" \
             '-Dmule.ee.password=${{ secrets.NEXUS_PASSWORD }}' \
-            "-Dap.ca.client_id=${{ vars.CONN_APP_CLIENT_ID }}" \
-            "-Dap.ca.client_secret=${{ vars.CONN_APP_CLIENT_SECRET }}"
+            "-Dap.ca.client_id=${{ secrets.CONN_APP_CLIENT_ID }}" \
+            "-Dap.ca.client_secret=${{ secrets.CONN_APP_CLIENT_SECRET }}"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -99,6 +99,6 @@ jobs:
       - name: Publish to Exchange
         run: |
           mvn deploy -Pdeploy-to-exchange-v3 --settings settings.xml -DskipMunitTests \
-            "-Dap.ca.client_id=${{ vars.CONN_APP_CLIENT_ID }}" \
-            "-Dap.ca.client_secret=${{ vars.CONN_APP_CLIENT_SECRET }}" \
-            "-Dencrypt.key=${{ vars.ENCRYPT_KEY }}"
+            "-Dap.ca.client_id=${{ secrets.CONN_APP_CLIENT_ID }}" \
+            "-Dap.ca.client_secret=${{ secrets.CONN_APP_CLIENT_SECRET }}" \
+            "-Dencrypt.key=${{ secrets.ENCRYPT_KEY }}"
