@@ -49,12 +49,12 @@ jobs:
 
           # --- 2. EXTRACT GROUP ID ---
           echo "Extracting Group ID from pom.xml..."
-          GROUP_ID=$(mvn help:evaluate -Dexpression=project.groupId -q -DforceStdout)
+          GROUP_ID=$(mvn help:evaluate --file pom.xml -Dexpression=project.groupId -q -DforceStdout)
           echo "Found Group ID: $GROUP_ID"
 
            # --- 3. RUN PRE-DEPLOYMENT TASKS ---
            chmod +x scripts/deploymentAutomationScript.sh
-          ./scripts/deploymentAutomationScript.sh ${{ inputs.ENVIRONMENT_NAME }} ${{ secrets.CONN_APP_CLIENT_ID }} ${{ secrets.CONN_APP_CLIENT_SECRET }} "$GROUP_ID" pom.xml ${{ inputs.DEPLOYMENT_TYPE }} ${{ inputs.PRE_DEPLOYMENT_ACTION }} > ./result.txt
+          ./scripts/deploymentAutomationScript.sh ${{ inputs.ENVIRONMENT_NAME }} ${{ secrets.CONN_APP_CLIENT_ID }} ${{ secrets.CONN_APP_CLIENT_SECRET }} "$GROUP_ID" --file pom.xml ${{ inputs.DEPLOYMENT_TYPE }} ${{ inputs.PRE_DEPLOYMENT_ACTION }} > ./result.txt
           cat result.txt
           echo "API_ID=$(cat result.txt | grep "APIId:" | cut -d":" -f2)" >> $GITHUB_OUTPUT
         shell: bash
