@@ -55,8 +55,6 @@ jobs:
         shell: bash
 
       - name: 2. Deploy to Runtime
-        env:
-          ENV_LOWER: ${{ toLower(inputs.ENVIRONMENT_NAME) }}
         run: |
           echo "Deploying to CloudHub 2.0 (${{ inputs.ENVIRONMENT_NAME }})..."
           mvn mule:deploy --settings settings.xml -DskipMunitTests \
@@ -68,7 +66,7 @@ jobs:
             "-Dencrypt.key=${{ secrets.ENCRYPT_KEY }}" \
             "-Dch.space=${{ vars.CH_SPACE }}" \
             "-Dapp.runtime.semver=${{ vars.APP_RUNTIME }}"  \
-            "-Denv=$ENV_LOWER"  \
+            "-Denv=dev"  \
             "-Dap.client_id=${{ vars.AP_CLIENT_ID }}" \
             "-Dap.client_secret=${{ vars.AP_CLIENT_SECRET }}" \
             "-Dapi.id=${{ steps.PreDeploy.outputs.API_ID }}"
