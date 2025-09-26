@@ -55,11 +55,9 @@ jobs:
         shell: bash
 
       - name: 2. Deploy to Runtime
+        env:
+          ENV_LOWER: ${{ toLower(inputs.ENVIRONMENT_NAME) }}
         run: |
-          environment="${{ inputs.ENVIRONMENT_NAME }}"
-          ENV_LOWER=$(echo "$environment" | tr '[:upper:]' '[:lower:]')
-          echo "Lowercase env = $ENV_LOWER"
-
           echo "Deploying to CloudHub 2.0 (${{ inputs.ENVIRONMENT_NAME }})..."
           mvn mule:deploy --settings settings.xml -DskipMunitTests \
             "-Dmule.ee.username=${{ secrets.NEXUS_USERNAME }}" \
