@@ -12,6 +12,7 @@ jobs:
       ENVIRONMENT_NAME: DEV
       DEPLOYMENT_TYPE: 'cloudhub2'
       PRE_DEPLOYMENT_ACTION: 'pre'
+      POST_DEPLOYMENT_ACTION:  'post'
     secrets: inherit
 
   SIT:
@@ -22,4 +23,5 @@ jobs:
       ENVIRONMENT_NAME: SIT
       DEPLOYMENT_TYPE: 'cloudhub2'
       PRE_DEPLOYMENT_ACTION: 'pre'
+      POST_DEPLOYMENT_ACTION:  'post'
     secrets: inherit
