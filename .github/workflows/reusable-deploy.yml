@@ -15,6 +15,10 @@ on:
         description: 'The pre-deployment action to perform'
         required: true
         type: string
+      POST_DEPLOYMENT_ACTION:
+        description: 'The post-deployment action to perform'
+        required: true
+        type: string
 
 jobs:
   Deploy:
