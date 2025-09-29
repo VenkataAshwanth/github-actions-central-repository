@@ -60,6 +60,12 @@ jobs:
 
       - name: 2. Deploy to Runtime
         run: |
+          # Correctly reference the workflow input and convert it to lowercase
+          ENV_LOWER=$(echo "${{ inputs.ENVIRONMENT_NAME }}" | tr '[:upper:]' '[:lower:]')
+          
+          echo "Original environment = ${{ inputs.ENVIRONMENT_NAME }}"
+          echo "Lowercase environment = $ENV_LOWER"
+          
           echo "Deploying to CloudHub 2.0 (${{ inputs.ENVIRONMENT_NAME }})..."
           mvn mule:deploy --settings settings.xml -DskipMunitTests \
             "-Dmule.ee.username=${{ secrets.NEXUS_USERNAME }}" \
@@ -70,7 +76,7 @@ jobs:
             "-Dencrypt.key=${{ secrets.ENCRYPT_KEY }}" \
             "-Dch.space=${{ vars.CH_SPACE }}" \
             "-Dapp.runtime.semver=${{ vars.APP_RUNTIME }}"  \
-            "-Denv=dev"  \
+            "-Denv=$ENV_LOWER"  \
             "-Dap.client_id=${{ vars.AP_CLIENT_ID }}" \
             "-Dap.client_secret=${{ vars.AP_CLIENT_SECRET }}" \
             "-Dapi.id=${{ steps.PreDeploy.outputs.API_ID }}"
